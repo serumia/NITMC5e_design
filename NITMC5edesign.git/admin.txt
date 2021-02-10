@@ -1,0 +1,211 @@
+<?php
+
+session_start();
+
+?>
+
+
+
+<html>
+<head>
+
+</head>
+<body>
+
+<?php
+
+
+	// セッション処理
+	if(isset($_SESSION['Name'])){
+		$Name=$_SESSION['Name'];
+	}
+	else{
+		$Name=NULL;
+	}
+	if(isset($_SESSION['Attribute'])){
+		$Attribute=$_SESSION['Attribute'];
+	}
+	else{
+		$Attribute=NULL;
+	}
+	// ログイン失敗処理
+	if(empty($Name)){
+		echo "ユーザ名かパスワードが間違っているか直接アクセスしています。<br>\n";
+		die("<a href=./login.html>戻る</a>");
+	}
+
+	$_SESSION['Name']=$Name;
+			
+	// データベースへの接続
+	$db = mysqli_connect('******', '******', '******', '******');
+	if(mysqli_connect_errno() > 0){
+    		die("接続失敗" . mysqli_connect_error());
+	}
+
+	// 文字コードのセット
+	mysqli_query($db,'SET NAMES utf8');
+
+    // 空であるか判定する関数の作成
+	if (!function_exists('is_no')) {
+        
+        function is_no($check)
+        {
+            if($check === 0 || $check === "0" || $check === ""){
+                return false;
+            }
+
+            return empty($check);
+        }
+    }
+	if (!function_exists('is_not')) {
+        function is_not($check)
+        {
+            if(is_no($check) === true){
+                return true;
+            }
+
+            if(is_string($check) && mb_ereg_match("^(\s|　)+$", $check)){
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+	// SQL文の生成・実行
+	$sql="SELECT * FROM User";
+	$sql_sort=$sql;
+
+	if(isset($_POST['ID']) && isset($_POST['Name']) && isset($_POST['Pass']) && isset($_POST['Attribute'])){
+		$ID=$_POST['ID'];
+		$Name=$_POST['Name'];
+		$Pass=$_POST['Pass'];
+		$Attribute=$_POST['Attribute'];
+
+		if(is_not($ID) || is_not($Pass) || is_not($Name) || is_not($Attribute)){
+			echo "ID・Name・Passwardのいずれかが未入力です<br>";
+		}
+		
+		else{	
+			if(isset($_POST['insert'])){
+				$sql="INSERT INTO User VALUES('".$ID."','".$Name."','".$Pass."','".$Attribute."')";
+            }
+			
+
+			if(isset($_POST['update'])){
+				$sql="UPDATE User SET ID='".$ID."',Pass='".$Pass."' ,Attribute='".$Attribute."' WHERE Name='".$Name."'";
+			}
+
+			if(isset($_POST['delete'])){
+				$sql="DELETE FROM User WHERE Name='".$Name."' AND Pass='".$Pass."' AND ID='".$ID."'";
+			}
+
+			$result=mysqli_query($db,$sql);
+			if(is_not($result)){
+				echo "書き込みに失敗しました<br>";
+			}
+			else{
+				echo "書き込みに成功しました<br>";
+			}
+		}
+	}
+
+
+	echo "<div align=center>\n";
+	echo "<h2>ユーザ管理(Admin mode）</h2>\n";
+	echo "<br>\n";
+	echo "<br>\n";
+
+	// 入力画面の表示
+	echo "<table border=0>\n";
+	echo "<caprion>ユーザの追加</caption>\n";
+	echo "<tr>\n";
+	echo "<td><div align=center>ID</div></td>\n";
+	echo "<td><div align=center>Name</div></td>\n";
+	echo "<td><div align=center>Passward</div></td>\n";
+	echo "<td><div align=center>Attribute</div></td>\n";
+	echo "<td></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+	echo "<form action=". $_SERVER["PHP_SELF"] ." method=POST>\n";
+	echo "<td><input type=text name=ID size=10></td>\n";
+	echo "<td><input type=text name=Name size=20></td>\n";
+	echo "<td><input type=text name=Pass size=10></td>\n";
+	echo "<td><input type=text name=Attribute ></td>\n";
+	echo "<td><input type=submit name=insert value=追加></td>\n";
+	echo "</form>\n";
+	echo "</tr>\n";
+	echo "</table>\n";
+	echo "<br>\n";
+	echo "<br>\n";
+
+	//絞り込み	
+	echo "<form action=".$_SERVER["PHP_SELF"]." method=POST>\n";
+	echo "<td><input type=submit name=all value=全て checked></td>\n";
+	echo "<td><input type=submit name=stu value=学生></td>\n";
+	echo "<td><input type=submit name=tea value=教員></td>\n";
+	echo "<td><input type=submit name=adm value=管理></td>\n";
+
+			if(isset($_POST['all'])){
+				$sql="SELECT * FROM User";
+				$sql_sort=$sql;
+
+			}
+			if(isset($_POST['stu'])){
+				$sql="SELECT * FROM User WHERE Attribute='student'";
+				$sql_sort=$sql;
+
+			}
+			if(isset($_POST['tea'])){
+				$sql="SELECT * FROM User WHERE Attribute='teacher'";
+				$sql_sort=$sql;
+
+			}
+			if(isset($_POST['adm'])){
+				$sql="SELECT * FROM User WHERE Attribute='admin'";
+				$sql_sort=$sql;
+
+			}
+おむおむ
+
+	// データの一覧表示
+	echo "<table border=1>\n";
+	echo "<caprion>ユーザの変更・削除</caption>\n";
+	echo "<tr>\n";
+	echo "<td><div align=center>ID</div></td>\n";
+	echo "<td><div align=center>Name</div></td>\n";
+	echo "<td><div align=center>Passward</div></td>\n";
+	echo "<td><div align=center>Attribute</div></td>\n";
+	echo "<td></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+	
+	
+
+	
+	$result=mysqli_query($db,$sql_sort);
+
+	while($array=mysqli_fetch_array($result)){
+		echo "<form action=".$_SERVER["PHP_SELF"]." method=POST>\n";
+		echo "<td><input type=text name=ID value=".$array["ID"]." size=20></td>\n";
+		echo "<td><input type=hidden name=Name value=".$array["Name"].">".$array["Name"]."</td>\n";
+		echo "<td><input type=text name=Pass value=".$array["Pass"]." size=10></td>\n";
+		echo "<td><input type=text name=Attribute value=".$array["Attribute"]." ></td>\n";
+		echo "<td><input type=submit name=update value=編集></td>\n";
+		echo "<td><input type=submit name=delete value=削除></td></tr>\n";
+		echo "</form>\n";
+	}
+	echo "</table>\n";
+	echo "<br>\n";
+	echo "<br>\n";
+
+	echo "<a href=./logon.html>前のページに戻る</a><br>\n";
+	echo "<br>\n";
+	echo "<a href=./logout.html>ログアウト</a><br>\n";
+	echo "</div>";
+
+	mysqli_close($db);
+
+?>
+</body>
+</html>

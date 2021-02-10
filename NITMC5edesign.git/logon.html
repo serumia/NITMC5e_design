@@ -1,0 +1,126 @@
+<?php
+
+session_start();
+
+?>
+
+
+
+<html>
+<head>
+
+</head>
+<body>
+
+<?php
+
+	// セッション処理
+	if(isset($_SESSION['Attribute'])){
+		$Attribute=$_SESSION['Attribute'];
+	}
+	else{
+		$Attribute=NULL;
+	}
+
+	// データベースへの接続
+	$db = mysqli_connect('******', '******', '******','******');
+    	if(mysqli_connect_errno() > 0){
+    		die("接続失敗" . mysqli_connect_error());
+	}
+
+	// 文字コードのセット
+	mysqli_query($db,'SET NAMES utf8');
+
+	// 空であるか判定する関数の作成
+	if (!function_exists('is_no')) {
+        
+        function is_no($check)
+        {
+            if($check === 0 || $check === "0" || $check === ""){
+                return false;
+            }
+
+            return empty($check);
+        }
+    }
+	if (!function_exists('is_not')) {
+        function is_not($check)
+        {
+            if(is_no($check) === true){
+                return true;
+            }
+
+            if(is_string($check) && mb_ereg_match("^(\s|　)+$", $check)){
+                return true;
+            }
+
+            return false;
+        }
+    }
+	
+	// ユーザIDとパスワードの確認
+	 if(isset($_POST['ID']) && isset($_POST['Pass'])){
+        $ID=$_POST['ID'];
+        $Pass=$_POST['Pass'];
+
+        $sql="SELECT * FROM User WHERE ID='". $ID ."' and Pass='". $Pass."'";
+        $result=mysqli_query($db,$sql);
+        $array=mysqli_fetch_array($result);
+        $Name=$array["Name"];
+		$Attribute=$array["Attribute"];
+    }
+    elseif(isset($_SESSION['Name'])){
+        $Name=$_SESSION['Name'];
+    }
+    else{
+        $Name=NULL;
+    }
+
+	// ログイン失敗処理
+	if(empty($Name)){
+		echo "ユーザ名かパスワードが間違っているか直接アクセスしています。<br>\n";
+		die("<a href=./login.html>戻る</a>");
+	}
+
+	$_SESSION['Name']=$Name;
+	$_SESSION['Attribute']=$Attribute;
+
+	//　ログオン画面の表示
+	if($Attribute=="teacher"){
+		echo "<div align=center>\n";
+		echo "<h2>出欠管理(teacher mode)</h2>\n";
+		echo "<br>\n";
+		echo "<br>\n";
+		echo "<a href=./root.html>出欠管理</a><br>\n";
+		echo "<br>\n";
+		echo "<a href=./logout.html>ログアウト</a><br>\n";
+		echo "</div>";
+	}
+	elseif($Attribute=="admin"){
+		echo "<div align=center>\n";
+		echo "<h2>ユーザ管理(admin mode)</h2>\n";
+		echo "<br>\n";
+		echo "<br>\n";
+		echo "<a href=./admin.html>人員管理</a><br>\n";
+		echo "<br>\n";
+		echo "<a href=./logout.html>ログアウト</a><br>\n";
+		echo "</div>";
+	}
+	else{
+		echo "<div align=center>\n";
+		echo "<h2>出欠管理(student mode)</h2>\n";
+		echo "<br>\n";
+		echo "<h3>ユーザ名：".$Name."</h3>\n";
+		echo "<br>\n";
+		echo "<a href=./student.html>出欠情報</a><br>\n";
+		echo "<br>\n";
+		echo "<a href=./logout.html>ログアウト</a><br>\n";
+		echo "</div>";
+	}
+
+
+?>
+
+
+</body>
+</html>

@@ -1,0 +1,179 @@
+<?php
+
+session_start();
+
+?>
+
+
+
+<html>
+<head>
+
+</head>
+<body>
+
+<?php
+
+	// セッション処理
+	if(isset($_SESSION['Name'])){
+		$Name=$_SESSION['Name'];
+	}
+	else{
+		$Name=NULL;
+	}
+	if(isset($_SESSION['Attribute'])){
+		$Attribute=$_SESSION['Attribute'];
+	}
+	else{
+		$Attribute=NULL;
+	}	
+
+
+	// ログイン失敗処理
+	if(empty($Name)){
+		echo "ユーザ名かパスワードが間違っているか直接アクセスしています。<br>\n";
+		die("<a href=./login.html>戻る</a>");
+	}
+
+	$_SESSION['Name']=$Name;
+	$Teacher=$Name;
+
+	// データベースへの接続
+	$db = mysqli_connect('******', '******', '******','******');
+	if(mysqli_connect_errno() > 0){
+    		die("接続失敗" . mysqli_connect_error());
+	}
+
+	// 文字コードのセット
+	mysqli_query($db,'SET NAMES utf8');
+
+	// 空であるか判定する関数の作成
+	if (!function_exists('is_no')) {
+        
+        function is_no($check)
+        {
+            if($check === 0 || $check === "0" || $check === ""){
+                return false;
+            }
+
+            return empty($check);
+        }
+    }
+	if (!function_exists('is_not')) {
+        function is_not($check)
+        {
+            if(is_no($check) === true){
+                return true;
+            }
+
+            if(is_string($check) && mb_ereg_match("^(\s|　)+$", $check)){
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+	// SQL文の生成・実行
+	if(isset($_POST['Subject']) && isset($_POST['Name']) && isset($_POST['Attendance']) && isset($_POST['Absence'])){
+		$Subject=$_POST['Subject'];
+		$Name=$_POST['Name'];
+		$Attendance=$_POST['Attendance'];
+		$Absence=$_POST['Absence'];
+
+		if(is_not($Subject) || is_not($Name) || is_not($Attendance) || is_not($Absence)){
+			echo "教科名・学生名・出席時数・欠課時数のいずれかが未入力です<br>";
+		}
+		else{	
+
+			if(isset($_POST['insert'])){
+				$sql="INSERT INTO teacher VALUES('".$Subject."','".$Name."','".$Attendance."','".$Absence."','".$Teacher."')";
+			}
+
+			if(isset($_POST['update'])){
+				$sql="UPDATE teacher SET Subject='".$Subject."',Attendance='".$Attendance."',Absence='".$Absence."',Teacher='".$Teacher."' WHERE Subject='".$Subject."' AND Name='".$Name."'";
+			}
+
+			if(isset($_POST['delete'])){
+				$sql="DELETE FROM teacher WHERE Subject='".$Subject."' AND Name='".$Name."'  AND Teacher='".$Teacher."'";
+			}
+
+			$result=mysqli_query($db,$sql);
+
+			if(empty($result)){
+				echo "書き込みに失敗しました<br>";
+			}
+			else{
+				echo "書き込みに成功しました<br>";
+			}
+		}
+	}
+
+	$_SESSION['Attribute']=$Attribute;
+
+	echo "<div align=center>\n";
+	echo "<h2>出欠管理(teacher mode)</h2>\n";
+	echo "<br>\n";
+	echo "<br>\n";
+
+	// 入力画面の表示
+	echo "<table border=0>\n";
+	echo "<caprion>出欠状況の追加</caption>\n";
+	echo "<tr>\n";
+	echo "<td><div align=center>教科名</div></td>\n";
+	echo "<td><div align=center>学生名</div></td>\n";
+	echo "<td><div align=center>出席時数</div></td>\n";
+	echo "<td><div align=center>欠課時数</div></td>\n";
+	echo "<td></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+	echo "<form action=". $_SERVER["PHP_SELF"] ." method=POST>\n";
+	echo "<td><input type=text name=Subject size=10></td>\n";
+	echo "<td><input type=text name=Name size=10></td>\n";
+	echo "<td><input type=text name=Attendance size=10></td>\n";
+	echo "<td><input type=text name=Absence size=10></td>\n";
+	echo "<td><input type=submit name=insert value=追加></td>\n";
+	echo "</form>\n";
+	echo "</tr>\n";
+	echo "</table>\n";
+	echo "<br>\n";
+	echo "<br>\n";
+
+	// データの一覧表示
+	echo "<table border=0>\n";
+	echo "<caprion>出欠状況の一覧表示</caption>\n";
+	echo "<tr>\n";
+	echo "<td><div align=center>教科名</div></td>\n";
+	echo "<td><div align=center>学生名</div></td>\n";
+	echo "<td><div align=center>出席時数</div></td>\n";
+	echo "<td><div align=center>欠課時数</div></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+
+	$sql="SELECT * FROM teacher WHERE teacher='".$Teacher."'";
+	$result=mysqli_query($db,$sql);
+
+	while($array=mysqli_fetch_array($result)){
+		echo "<form action=".$_SERVER["PHP_SELF"]." method=POST>\n";
+		echo "<td><input type=hidden name=Subject value=".$array["Subject"].">".$array["Subject"]."</td>\n";
+		echo "<td><input type=hidden name=Name value=".$array["Name"].">".$array["Name"]."</td>\n";
+		echo "<td><input type=text name=Attendance value=".$array["Attendance"]." size=10></td>\n";
+		echo "<td><input type=text name=Absence value=".$array["Absence"]." size=10></td>\n";
+		echo "<td><input type=submit name=update value=編集></td>\n";
+		echo "<td><input type=submit name=delete value=削除></td></tr>\n";
+		echo "</form>\n";
+	}
+	echo "</table>\n";
+	echo "<br>\n";
+	echo "<br>\n";
+
+	echo "<a href=./logon.html>前のページに戻る</a><br>\n";
+	echo "<br>\n";
+	echo "<a href=./logout.html>ログアウト</a><br>\n";
+	echo "</div>";
+
+	mysqli_close($db);
+
+?>
+</body>
+</html>

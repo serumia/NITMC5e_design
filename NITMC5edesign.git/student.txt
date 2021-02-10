@@ -1,0 +1,85 @@
+<?php
+
+session_start();
+
+?>
+
+
+
+<html>
+<head>
+
+</head>
+<body>
+
+<?php
+
+	// セッション処理
+	if(isset($_SESSION['Name'])){
+		$Name=$_SESSION['Name'];
+	}
+	else{
+		$Name=NULL;
+	}
+	if(isset($_SESSION['Attribute'])){
+		$Attribute=$_SESSION['Attribute'];
+	}
+	else{
+		$Attribute=NULL;
+	}	
+
+
+	// ログイン失敗処理
+	if(empty($Name)){
+		echo "ユーザ名かパスワードが間違っているか直接アクセスしています。<br>\n";
+		die("<a href=./login.html>戻る</a>");
+	}
+
+	$_SESSION['Name']=$Name;
+	$Teacher=$Name;
+
+	// データベースへの接続
+	$db = mysqli_connect('******', '******', '******','******');
+	if(mysqli_connect_errno() > 0){
+    		die("接続失敗" . mysqli_connect_error());
+	}
+
+	// 文字コードのセット
+	mysqli_query($db,'SET NAMES utf8');
+
+    echo "<div align=center>\n";
+	echo "<h2>出欠管理(student mode)</h2>\n";
+	echo "<br>\n";
+	echo "<h3>ユーザ名：".$Name."</h3>\n";
+	echo "<br>\n";
+	
+    // データの一覧表示
+	echo "<table border=1>\n";
+	echo "<caprion>出欠状況の一覧表示</caption>\n";
+	echo "<tr>\n";
+	echo "<td><div align=center>教科名</div></td>\n";
+	echo "<td><div align=center>出席時数</div></td>\n";
+	echo "<td><div align=center>欠課時数</div></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+
+	$sql="SELECT * FROM teacher WHERE Name='".$Name."'";
+	$result=mysqli_query($db,$sql);
+
+	while($array=mysqli_fetch_array($result)){
+    echo "<tr><td>".$array["Subject"]."</td><td>".$array["Attendance"]."</td><td>".$array["Absence"]."</td></tr>\n";
+	}
+	echo "</table>\n";
+	echo "<br>\n";
+	echo "<br>\n";
+
+	echo "<a href=./logon.html>前のページに戻る</a><br>\n";
+	echo "<br>\n";
+	echo "<a href=./logout.html>ログアウト</a><br>\n";
+	echo "</div>";
+
+	mysqli_close($db);
+
+?>
+</body>
+</html>

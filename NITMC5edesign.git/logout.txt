@@ -1,0 +1,23 @@
+<?php
+
+session_start();
+
+?>
+
+
+<html>
+<html>
+<head>
+<META HTTP-EQUIV="Refresh" CONTENT="1; URL=http://nitmc5e.com/~20t_kawano/login.html" />
+
+</head>
+<body>
+
+<?php
+	// セッションの破棄
+	session_destroy();
+?>
+
+
+</body>
+</html>
